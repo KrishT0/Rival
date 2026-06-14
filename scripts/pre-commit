@@ -1,0 +1,6 @@
+#!/bin/sh
+
+echo "Running backend tests..."
+cd backend && go test ./internal/service/ -v || exit 1
+
+echo "All checks passed."
