@@ -64,9 +64,10 @@ func (s *AuthService) Login(ctx context.Context, email, password string) (string
 
 func generateJWT(user *model.User) (string, error) {
 	claims := jwt.MapClaims{
-		"sub":  user.ID,
-		"role": user.Role,
-		"exp":  time.Now().Add(24 * time.Hour).Unix(),
+		"sub":   user.ID,
+		"email": user.Email,
+		"role":  user.Role,
+		"exp":   time.Now().Add(24 * time.Hour).Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

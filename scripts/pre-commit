@@ -1,6 +1,11 @@
 #!/bin/sh
 
 echo "Running backend tests..."
-cd backend && go test ./internal/service/ -v || exit 1
+cd backend && go test ./internal/service/... -v || exit 1
+cd ..
+
+echo "Running frontend build..."
+cd frontend && pnpm build || exit 1
+cd ..
 
 echo "All checks passed."
