@@ -36,6 +36,7 @@ func main() {
 	// global middleware
 	r.Use(chimiddleware.Logger)
 	r.Use(chimiddleware.Recoverer)
+	r.Use(chimiddleware.Heartbeat("/"))
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins: strings.Split(os.Getenv("ALLOWED_ORIGINS"), ","),
 		AllowedMethods: []string{"GET", "POST", "PATCH", "DELETE", "OPTIONS"},

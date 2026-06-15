@@ -216,7 +216,7 @@ export function TaskFormSheet({
                         }
                       </SelectValue>
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent alignItemWithTrigger={false}>
                       <SelectItem value="todo">TODO</SelectItem>
                       <SelectItem value="in_progress">In Progress</SelectItem>
                       <SelectItem value="done">Done</SelectItem>
