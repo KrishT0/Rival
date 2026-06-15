@@ -15,11 +15,13 @@ A full-stack task management application built for the Rival Full-Stack Develope
 - **Database:** PostgreSQL (Neon in production, Docker locally)
 - **Auth:** JWT stored in an httpOnly cookie, bcrypt password hashing
 - **Deployment:** Vercel (frontend), Render (backend), Neon (database)
+- **CI/CD:** GitHub Actions (backend tests + build, frontend build) on every push and pull request
 
 ## Project Structure
 
 ```
 
+├── .github/workflows/    CI pipeline (GitHub Actions)
 ├── backend/              Go REST API
 │   ├── cmd/server/       Application entry point
 │   ├── internal/
@@ -213,11 +215,30 @@ cd backend
 go test ./internal/service/... -v
 ```
 
+## CI/CD
+
+### Local pre-commit hook
+
+`scripts/pre-commit` runs backend tests and a frontend production build before each commit, giving fast local feedback before pushing.
+
+```bash
+make install-hooks
+```
+
+### GitHub Actions
+
+`.github/workflows/ci.yml` runs on every push and pull request to `main`, in a clean environment independent of any local setup:
+
+- **Backend job:** runs `go test ./internal/service/...` and verifies the binary builds (`go build ./cmd/server`)
+- **Frontend job:** installs dependencies with a frozen lockfile and runs `pnpm build`
+
+The pre-commit hook and CI serve complementary purposes: the hook gives immediate local feedback and can be skipped (`git commit --no-verify`) or never installed by a collaborator, while CI is the authoritative, unskippable check that runs for every push regardless of local setup.
+
 ## Assumptions and Trade-offs
 
 - **Auth storage:** the JWT is stored in an httpOnly cookie set by Next.js server actions, rather than `localStorage`. This protects the token from XSS but means all task API calls are proxied through Next.js server actions (which read the cookie and forward `Authorization: Bearer <token>` to the Go backend).
-- **"Mark Complete" deletes the task** rather than setting `status: done` and keeping it visible. This was a deliberate simplification — a "completed tasks" view could be added later by changing this to a status update instead.
+- **"Mark Complete" sets `status: done`** and the task remains visible with a "Completed" badge; the button becomes disabled once a task is done. Tasks can be filtered to show only `done` items. Deleting a task is a separate action, available from the overflow menu on each card.
 - **Filters, search, and sort are client-side state**, not reflected in the URL. This was chosen for simplicity; URL-synced filters (shareable/bookmarkable views) would be a natural next step.
-- **Role-based access (admin)** and other "Plus Features" (real-time updates, optimistic UI, attachments, activity log, CI pipeline, dark mode) were deprioritized given the assessment's 3-5 day window, except for **dark mode** and **Dockerized local setup**, which are implemented.
+- **Role-based access (admin)** and other "Plus Features" (real-time updates, optimistic UI, attachments, activity log) were deprioritized given the assessment's 3-5 day window, except for **dark mode**, **Dockerized local setup**, and **CI pipeline**, which are implemented.
 - **Dark mode** is implemented via `next-themes` with a toggle in the task dashboard header, persisted automatically across sessions.
 - **Render free tier cold starts:** the deployed backend may take up to a minute to respond on the first request after a period of inactivity.

@@ -1,7 +1,7 @@
 "use client";
 
 import type { Task } from "@/actions/tasks";
-import { deleteTask } from "@/actions/tasks";
+import { deleteTask, updateTask } from "@/actions/tasks";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,12 +33,13 @@ type TaskCardProps = {
 };
 
 export function TaskCard({ task, onEdit, onDeleted }: TaskCardProps) {
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const isDone = task.status === "done";
 
   async function handleComplete() {
-    setIsDeleting(true);
-    const result = await deleteTask(task.id);
-    setIsDeleting(false);
+    setIsUpdating(true);
+    const result = await updateTask(task.id, { status: "done" });
+    setIsUpdating(false);
 
     if (!result.success) {
       toast.error(result.error);
@@ -46,6 +47,20 @@ export function TaskCard({ task, onEdit, onDeleted }: TaskCardProps) {
     }
 
     toast.success("Task completed");
+    onDeleted(); // re-fetch list
+  }
+
+  async function handleDelete() {
+    setIsUpdating(true);
+    const result = await deleteTask(task.id);
+    setIsUpdating(false);
+
+    if (!result.success) {
+      toast.error(result.error);
+      return;
+    }
+
+    toast.success("Task deleted");
     onDeleted();
   }
 
@@ -67,7 +82,7 @@ export function TaskCard({ task, onEdit, onDeleted }: TaskCardProps) {
             <DropdownMenuItem onClick={() => onEdit(task)}>
               Edit
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleComplete} disabled={isDeleting}>
+            <DropdownMenuItem onClick={handleDelete} disabled={isUpdating}>
               Delete
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -97,13 +112,13 @@ export function TaskCard({ task, onEdit, onDeleted }: TaskCardProps) {
       </div>
 
       <Button
-        variant="outline"
+        variant={isDone ? "secondary" : "outline"}
         size="sm"
         className="mt-3 w-full"
         onClick={handleComplete}
-        disabled={isDeleting}
+        disabled={isUpdating || isDone}
       >
-        {isDeleting ? "Completing..." : "Mark Complete"}
+        {isDone ? "Completed" : isUpdating ? "Completing..." : "Mark Complete"}
       </Button>
     </div>
   );
