@@ -1,5 +1,5 @@
 import { jwtDecode } from "jwt-decode";
-import { redirect } from "next/dist/client/components/navigation";
+import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import React from "react";
 import { TaskHeader } from "./components/task-header";
@@ -19,7 +19,7 @@ export default async function TaskLayout({
   const cookieStore = await cookies();
   const token = cookieStore.get("token");
 
-  if (!token) redirect("/login");
+  if (!token) redirect("/");
 
   const claims = jwtDecode<JWTClaims>(token.value);
 
