@@ -15,7 +15,12 @@ import {
   InputGroupAddon,
   InputGroupInput,
 } from "@/components/ui/input-group";
-import { type AuthFormData, authSchema } from "@/lib/validations/auth";
+import {
+  type AuthFormData,
+  type SignUpAuthFormData,
+  authSchema,
+  signUpAuthSchema,
+} from "@/lib/validations/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -28,15 +33,18 @@ export function AuthForm() {
   const [isPending, setIsPending] = useState(false);
   const [isLogin, setIsLogin] = useState<boolean>(true);
   const [showPassword, setShowPassword] = useState<boolean>(false);
-  const form = useForm<AuthFormData>({
-    resolver: zodResolver(authSchema),
+  const [showConfirmPassword, setShowConfirmPassword] =
+    useState<boolean>(false);
+  const form = useForm<AuthFormData | SignUpAuthFormData>({
+    resolver: zodResolver(isLogin ? authSchema : signUpAuthSchema),
     defaultValues: {
       email: "",
       password: "",
+      confirmPassword: "",
     },
   });
 
-  async function onSubmit(data: AuthFormData) {
+  async function onSubmit(data: AuthFormData | SignUpAuthFormData) {
     setIsPending(true);
     const action = isLogin ? login : signup;
     const result = await action(data);
@@ -131,6 +139,40 @@ export function AuthForm() {
           )}
         />
 
+        {!isLogin && (
+          <Controller
+            name="confirmPassword"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor="confirmPassword">
+                  Confirm Password
+                </FieldLabel>
+                <InputGroup className="max-w-xs">
+                  <InputGroupInput
+                    placeholder="demo@123"
+                    {...field}
+                    id="confirmPassword"
+                    type={showConfirmPassword ? "text" : "password"}
+                    autoComplete="off"
+                    aria-invalid={fieldState.invalid}
+                  />
+                  <InputGroupAddon
+                    align="inline-end"
+                    className="cursor-pointer"
+                    onClick={() => setShowConfirmPassword((prev) => !prev)}
+                  >
+                    {showConfirmPassword ? <EyeOff /> : <Eye />}
+                  </InputGroupAddon>
+                </InputGroup>
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
+              </Field>
+            )}
+          />
+        )}
+
         <Field>
           <Button disabled={isPending} type="submit">
             {isLogin ? "Login" : "Sign up"}
@@ -140,7 +182,10 @@ export function AuthForm() {
           or{" "}
           <span
             className="underline cursor-pointer"
-            onClick={() => setIsLogin(!isLogin)}
+            onClick={() => {
+              setIsLogin(!isLogin);
+              form.reset();
+            }}
           >
             {isLogin ? "Sign up" : "Login"}
           </span>
